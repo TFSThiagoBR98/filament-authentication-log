@@ -13,6 +13,7 @@ use Filament\Tables\Filters\Filter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Support\HtmlString;
 use Illuminate\Support\Str;
 use Rappasoft\LaravelAuthenticationLog\Models\AuthenticationLog;
@@ -80,7 +81,20 @@ class AuthenticationLogResource extends Resource
                             return new HtmlString('&mdash;');
                         }
 
-                        return new HtmlString('<a href="'.route('filament.'.Filament::getCurrentPanel()->getId().'.resources.'.Str::plural((Str::lower(class_basename($record->authenticatable::class)))).'.edit', ['record' => $record->authenticatable_id]).'" class="inline-flex items-center justify-center hover:underline focus:outline-none focus:underline filament-tables-link text-primary-600 hover:text-primary-500 text-sm font-medium filament-tables-link-action">'.class_basename($record->authenticatable::class).'</a>');
+                        return new HtmlString(class_basename($record->authenticatable::class));
+                    })
+                    ->url(function (?string $state, Model $record) {
+                        if (! $record->authenticatable_id) {
+                            return null;
+                        }
+
+                        $routeName = 'filament.'.Filament::getCurrentPanel()->getId().'.resources.'.Str::plural((Str::lower(class_basename($record->authenticatable::class)))).'.edit';
+
+                        if (Route::has($routeName)) {
+                            return route($routeName, ['record' => $record->authenticatable_id]);
+                        } else {
+                            return null;
+                        }
                     })
                     ->sortable(),
                 Tables\Columns\TextColumn::make('ip_address')
